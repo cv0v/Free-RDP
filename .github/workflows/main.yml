@@ -7,9 +7,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Download LocalXpose
-      run: Invoke-WebRequest https://files.localxpose.io/localxpose/windows/localxpose.exe -OutFile localxpose.exe
-
     - name: Enable RDP
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
@@ -17,7 +14,8 @@ jobs:
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
 
-    - name: Start LocalXpose Tunnel
-      run: .\localxpose.exe tcp --port 3389 --token $Env:LOCALTOKEN
-      env:
-        LOCALTOKEN: ${{ secrets.LOCALTOKEN }}
+    - name: Install OpenSSH Client
+      run: Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+
+    - name: Create Tunnel with Serveo
+      run: ssh -o StrictHostKeyChecking=no -R 3389:localhost:3389 serveo.net
